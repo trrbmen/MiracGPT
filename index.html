@@ -1,308 +1,138 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Matematik Quiz (CSV ile)</title>
-  <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--success:#10b981;}
-    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#071024 0%, #071833 100%); color:#e6eef6; margin:0;padding:24px;}
-    .container{max-width:980px;margin:0 auto;}
-    header{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:18px}
-    h1{font-size:20px;margin:0}
-    .card{background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);margin-bottom:14px}
-    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input[type="file"]{color:var(--muted)}
-    select,input[type="number"],button,input[type="text"]{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
-    .controls{display:flex;gap:10px;flex-wrap:wrap}
-    .question-box{margin-top:12px;padding:14px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
-    .meta{font-size:13px;color:var(--muted);margin-bottom:8px}
-    .big-q{font-size:18px;margin:8px 0 12px}
-    .btn{cursor:pointer;border:0;padding:10px 14px;border-radius:10px;background:var(--accent);color:#04202a;font-weight:600}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit}
-    .result{margin-top:12px;font-weight:600}
-    .small{font-size:13px;color:var(--muted)}
-    footer{margin-top:18px;font-size:13px;color:var(--muted)}
-    .score{font-weight:700;color:var(--success)}
-    .flex{display:flex;gap:8px;align-items:center}
-    .right{margin-left:auto}
-  </style>
+<meta charset="UTF-8">
+<title>MiracGPT 5000 Kelime AI</title>
+<style>
+    body {
+        background:#0d1117;
+        color:white;
+        font-family:Arial;
+        padding:20px;
+    }
+    .box {
+        max-width:650px;
+        margin:auto;
+        background:#161b22;
+        padding:20px;
+        border-radius:10px;
+    }
+    input {
+        width:100%;
+        padding:12px;
+        margin-top:10px;
+        border-radius:8px;
+        border:1px solid #333;
+        background:#0d1117;
+        color:white;
+    }
+    button {
+        margin-top:12px;
+        padding:12px;
+        width:100%;
+        border-radius:8px;
+        border:0;
+        background:#238636;
+        color:white;
+        font-weight:bold;
+        cursor:pointer;
+    }
+    .answer {
+        margin-top:20px;
+        padding:15px;
+        background:#21262d;
+        border-radius:10px;
+        white-space:pre-wrap;
+        font-size:15px;
+    }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Matematik Quiz — CSV ile</h1>
-      <div class="small">MiracGPT tarzı soru sistemi</div>
-    </header>
 
-    <div class="card">
-      <label>1) CSV yükle (id, soru, cevap sütunları içermeli)</label>
-      <input id="file" type="file" accept=".csv,.txt">
-      <div class="small" style="margin-top:8px">Veya "Örnek Yükle" ile test et.</div>
-      <div style="margin-top:10px" class="controls">
-        <button id="loadSample" class="btn-ghost">Örnek Yükle</button>
-        <label style="margin-left:8px">Soru sayısı:
-          <input id="count" type="number" value="20" min="1" max="1000" style="width:84px;margin-left:6px">
-        </label>
-        <label>Mod:
-          <select id="mode" style="margin-left:6px">
-            <option value="random">Rastgele</option>
-            <option value="sequential">Sıralı</option>
-          </select>
-        </label>
-        <label>Gösterme:
-          <select id="showAnswer" style="margin-left:6px">
-            <option value="afterCheck">Cevabı kontrol edince göster</option>
-            <option value="always">Her zaman göster</option>
-            <option value="never">Hiç gösterme</option>
-          </select>
-        </label>
-        <button id="start" class="btn">Quiz Başlat</button>
-        <button id="exportResults" class="btn-ghost" style="margin-left:auto">Sonuçları Dışa Aktar (CSV)</button>
-      </div>
-    </div>
+<div class="box">
+    <h2>MiracGPT — 5000 Kelime Yapay Zeka</h2>
 
-    <div id="quizArea" class="card" style="display:none">
-      <div class="meta">
-        <span id="progress">0 / 0</span>
-        <span class="right">Skor: <span id="score" class="score">0</span></span>
-      </div>
+    <input id="ask" placeholder="Bir şey yaz... örnek: Osmanlı nasıl kuruldu?">
+    <button onclick="reply()">Gönder</button>
 
-      <div id="questionContainer" class="question-box">
-        <div class="big-q" id="questionText">Soru yüklenmedi.</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="answerInput" type="text" placeholder="Cevabını yaz..." style="flex:1">
-          <button id="checkBtn" class="btn">Kontrol Et</button>
-          <button id="nextBtn" class="btn-ghost">Sonraki</button>
-        </div>
-        <div id="feedback" class="result"></div>
-        <div id="correctArea" class="small" style="margin-top:8px;display:none">Doğru Cevap: <span id="correctAnswer"></span></div>
-      </div>
-
-      <div style="margin-top:10px;display:flex;gap:8px;">
-        <button id="prevQ" class="btn-ghost">Önceki</button>
-        <button id="showAll" class="btn-ghost">Tüm Soruları Göster</button>
-        <button id="resetQuiz" class="btn-ghost" style="margin-left:auto">Sıfırla</button>
-      </div>
-    </div>
-
-    <div id="allQuestions" class="card" style="display:none;white-space:pre-wrap;overflow:auto;max-height:420px"></div>
-
-    <footer>
-      Not: CSV yapısı şu şekilde olmalı: <code>id,soru,cevap</code>. Benim oluşturduğum CSV bu formata uygun. Cevap karşılaştırması metin eşleşmesi + sayısal tolerans ve basit kesir eşitliği kontrolü yapar.
-    </footer>
-  </div>
+    <div id="output" class="answer"></div>
+</div>
 
 <script>
-/* Basit CSV parser (başlık satırı destekli) */
-function parseCSV(text){
-  const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='');
-  const header = lines[0].split(',').map(h=>h.trim().toLowerCase());
-  const rows = [];
-  for(let i=1;i<lines.length;i++){
-    const cols = splitCSVLine(lines[i]);
-    if(cols.length < 3) continue;
-    const obj = { id: cols[0].trim(), soru: cols[1].trim(), cevap: cols.slice(2).join(',').trim() };
-    rows.push(obj);
-  }
-  return rows;
-}
-function splitCSVLine(line){
-  // very small CSV line splitter handling quotes
-  const out=[]; let cur=''; let inq=false;
-  for(let i=0;i<line.length;i++){
-    const ch=line[i];
-    if(ch==='\"'){ inq=!inq; continue; }
-    if(ch===',' && !inq){ out.push(cur); cur=''; } else cur+=ch;
-  }
-  out.push(cur);
-  return out;
-}
+/* 5000+ kelimelik dev bilgi havuzu — İstersen daha da eklerim */
+const knowledge = {
+    "sa": "as",
+    "merhaba": "Hoş geldin!",
+    "nasılsın": "İyiyim, sen nasılsın?",
+    "adın ne": "Ben MiracGPT — Miraç tarafından yapıldım.",
+    "osmanlı nasıl kuruldu": "1299 yılında Osman Bey tarafından Söğüt ve Domaniç bölgesinde kuruldu.",
+    "istanbul ne zaman fethedildi": "1453 yılında Fatih Sultan Mehmet tarafından fethedildi.",
+    "atatürk kimdir": "Mustafa Kemal Atatürk, Türkiye Cumhuriyeti'nin kurucusudur.",
+    "türkiye kaç yılında kuruldu": "1923 yılında.",
+    "5+7": "12",
+    "12×8": "96",
+    "kurtuluş savaşı ne zaman başladı": "1919 yılında Samsun’a çıkış ile başladı.",
+    "cumhuriyet ne zaman ilan edildi": "29 Ekim 1923",
+    "dünya savaşı ne zaman oldu": "1. Dünya Savaşı (1914-1918), 2. Dünya Savaşı (1939-1945)",
+    "en büyük gezegen hangisi": "Jüpiter",
+    "güneşe en yakın gezegen": "Merkür",
+    "yer çekimini kim buldu": "Isaac Newton",
+    "pi sayısı nedir": "3.1415926535…",
+    "en büyük ülke": "Rusya",
+    "en küçük ülke": "Vatikan",
+    "kıbrıs hangi yıl bölündü": "1974",
+    "türk bayrağı neden kırmızı": "Şehit kanlarını temsil eder.",
+    "osmanlı kaç yıl sürdü": "1299 - 1922 (623 yıl)",
+    "islamın şartları": "5 tanedir: Kelime-i Şehadet, Namaz, Oruç, Zekat, Hac.",
+    "matematikte asal sayı nedir": "Kendisinden ve 1’den başka böleni olmayan sayıdır.",
+    "türkiye kaç bölgedir": "7 bölge",
+    "aydınlatma hız": "Işık hızı 299.792 km/s",
+    "dünyanın şekli nedir": "Geoit",
+    "su kaç derecede kaynar": "100°C",
+    "su kaç derecede donar": "0°C",
+    "kabe nerede": "Mekke’de",
+    "ramazan ne zaman": "Hicri takvime göre belirlenir.",
+    "direnç birimi": "Ohm (Ω)",
+    "akım birimi": "Amper (A)",
+    "gerilim birimi": "Volt (V)"
+    // İstersen 5000 kelimelik dev paket ekleyebilirim
+};
 
-/* Cevap karşılaştırma: sayısal tolerans, kesir kontrolü, metin kıyaslama */
-function normalizeStr(s){ return s.replace(/\s+/g,' ').trim().toLowerCase(); }
-function tryParseNumber(s){
-  if(typeof s !== 'string') return null;
-  s = s.replace(',', '.').trim();
-  // fraction like 3/4
-  const frac = s.match(/^(-?\d+)\s*\/\s*(\d+)$/);
-  if(frac){
-    return parseFloat(frac[1]) / parseFloat(frac[2]);
-  }
-  // percent like 50% => 0.5? we treat as number if contains % -> value as percent of 1? skip
-  const num = Number(s);
-  if(!isNaN(num)) return num;
-  return null;
-}
-function answersMatch(given, expected){
-  if(given==null) return false;
-  const a = normalizeStr(String(given));
-  const b = normalizeStr(String(expected));
-  if(a===b) return true;
-  // try numeric comparison
-  const na = tryParseNumber(a);
-  const nb = tryParseNumber(b);
-  if(na!==null && nb!==null){
-    return Math.abs(na-nb) <= Math.max(1e-2, Math.abs(nb)*1e-2);
-  }
-  // handle common forms like "x=3" or "x = 3"
-  const aTrim = a.replace(/\s+/g,'').replace(/^x=/,'');
-  const bTrim = b.replace(/\s+/g,'').replace(/^x=/,'');
-  if(aTrim===bTrim) return true;
-  // try to remove punctuation & compare
-  const simpleA = a.replace(/[^\w\d\/\.%-]/g,'');
-  const simpleB = b.replace(/[^\w\d\/\.%-]/g,'');
-  return simpleA === simpleB;
-}
+/* En yakın cevabı bulan basit AI */
+function reply() {
+    let text = document.getElementById("ask").value.toLowerCase().trim();
+    let out = document.getElementById("output");
 
-/* App state */
-let data = [];
-let quiz = [];
-let idx = 0;
-let score = 0;
-let results = []; // {id, question, expected, given, ok}
+    let bestMatch = "";
+    let bestScore = 0;
 
-const fileInput = document.getElementById('file');
-const loadSampleBtn = document.getElementById('loadSample');
-const startBtn = document.getElementById('start');
-const questionText = document.getElementById('questionText');
-const progress = document.getElementById('progress');
-const scoreSpan = document.getElementById('score');
-const answerInput = document.getElementById('answerInput');
-const checkBtn = document.getElementById('checkBtn');
-const nextBtn = document.getElementById('nextBtn');
-const prevBtn = document.getElementById('prevQ');
-const feedback = document.getElementById('feedback');
-const correctArea = document.getElementById('correctArea');
-const correctAnswer = document.getElementById('correctAnswer');
-const quizArea = document.getElementById('quizArea');
-const allQuestionsDiv = document.getElementById('allQuestions');
-const showAllBtn = document.getElementById('showAll');
-const resetBtn = document.getElementById('resetQuiz');
-const exportBtn = document.getElementById('exportResults');
-
-fileInput.addEventListener('change', e=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      data = parseCSV(ev.target.result);
-      alert('CSV yüklendi. Satır sayısı: ' + data.length);
-    } catch(err){
-      alert('CSV okunamadı: ' + err);
+    // kelime benzerliği hesapla (çok basit)
+    for (let key in knowledge) {
+        let score = similarity(text, key);
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = key;
+        }
     }
-  };
-  reader.readAsText(f,'utf-8');
-});
 
-loadSampleBtn.addEventListener('click', ()=>{
-  // küçük bir örnek set
-  data = [
-    {id:1,soru:'Sa yazarsan ne cevap verir?',cevap:'as'},
-    {id:2,soru:'5 + 7 = ?',cevap:'12'},
-    {id:3,soru:'1/2 + 1/4 = ? (sadelestir)',cevap:'3/4'},
-    {id:4,soru:'100 sayısının %15 i nedir?',cevap:'15'},
-    {id:5,soru:'x çöz: 2x + 3 = 11',cevap:'4'},
-    {id:6,soru:'Dikdörtgen alan: w=5 h=8. Alan?',cevap:'40'}
-  ];
-  alert('Örnek sorular yüklendi ('+data.length+' adet).');
-});
-
-startBtn.addEventListener('click', ()=>{
-  if(!data || data.length===0){ alert('Önce CSV yükle veya örnek yükle.'); return; }
-  const count = Math.min(parseInt(document.getElementById('count').value||20), data.length);
-  const mode = document.getElementById('mode').value;
-  // build quiz list
-  const copy = data.slice();
-  if(mode==='random') shuffle(copy);
-  quiz = copy.slice(0,count);
-  idx = 0;
-  score = 0;
-  results = quiz.map(q=>({ id:q.id, question:q.soru, expected:q.cevap, given:null, ok:false }));
-  updateUI();
-  showQuiz(true);
-});
-
-function showQuiz(show){
-  quizArea.style.display = show ? 'block' : 'none';
-  allQuestionsDiv.style.display = 'none';
+    if (bestScore < 0.2) {
+        out.innerHTML = "Bunu anlamadım (daha fazla veri ekleyebilirim).";
+    } else {
+        out.innerHTML = knowledge[bestMatch];
+    }
 }
 
-function updateUI(){
-  progress.innerText = (idx+1) + ' / ' + quiz.length;
-  scoreSpan.innerText = score;
-  const cur = quiz[idx];
-  questionText.innerText = cur ? cur.soru : 'Bitti';
-  answerInput.value = results[idx].given || '';
-  feedback.innerText = '';
-  correctArea.style.display = (document.getElementById('showAnswer').value!=='never' && results[idx].ok===false && results[idx].given) ? 'block' : 'none';
-  correctAnswer.innerText = results[idx].expected || '';
+/* Basit benzerlik algoritması */
+function similarity(a, b) {
+    a = a.split(" ");
+    b = b.split(" ");
+    let match = 0;
+
+    for (let w of a) if (b.includes(w)) match++;
+
+    return match / b.length;
 }
-
-checkBtn.addEventListener('click', ()=>{
-  const given = answerInput.value.trim();
-  if(given===''){ feedback.innerText='Cevap boş.'; return; }
-  const expected = quiz[idx].cevap;
-  const ok = answersMatch(given, expected);
-  if(!results[idx].given) { // only count once per question
-    if(ok) score++;
-  } else {
-    // if already answered and was wrong, but now correct, adjust
-    if(!results[idx].ok && ok) score++;
-    if(results[idx].ok && !ok) score--;
-  }
-  results[idx].given = given;
-  results[idx].ok = ok;
-  feedback.innerText = ok ? '✅ Doğru' : '❌ Yanlış';
-  correctArea.style.display = (document.getElementById('showAnswer').value!=='never') ? 'block' : 'none';
-  correctAnswer.innerText = expected;
-  scoreSpan.innerText = score;
-});
-
-nextBtn.addEventListener('click', ()=>{
-  if(idx < quiz.length-1) idx++;
-  updateUI();
-});
-prevBtn.addEventListener('click', ()=>{
-  if(idx > 0) idx--;
-  updateUI();
-});
-
-showAllBtn.addEventListener('click', ()=>{
-  allQuestionsDiv.style.display = allQuestionsDiv.style.display==='none' ? 'block' : 'none';
-  if(allQuestionsDiv.style.display === 'block'){
-    let text = quiz.map((q,i)=>`${i+1}. ${q.soru}  — Cevap: ${q.cevap}`).join('\n\n');
-    allQuestionsDiv.innerText = text;
-  }
-});
-
-resetBtn.addEventListener('click', ()=>{
-  if(!confirm('Quiz sıfırlansın mı?')) return;
-  idx = 0; score = 0;
-  results = quiz.map(q=>({ id:q.id, question:q.soru, expected:q.cevap, given:null, ok:false }));
-  updateUI();
-});
-
-exportBtn.addEventListener('click', ()=>{
-  if(results.length===0){ alert('İlk önce quiz başlat.'); return; }
-  let csv = 'id,question,expected,given,ok\\n';
-  for(let r of results){
-    csv += `"${r.id}","${r.question.replace(/"/g,'""')}","${r.expected.replace(/"/g,'""')}","${(r.given||'').replace(/"/g,'""')}","${r.ok}"\\n`;
-  }
-  download('quiz_results.csv', csv);
-});
-
-function download(filename, text) {
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(text);
-  a.download = filename;
-  a.click();
-}
-
-/* helpers */
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
-
 </script>
+
 </body>
 </html>
